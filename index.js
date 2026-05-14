@@ -5,45 +5,38 @@ require('dotenv').config();
 
 const app = express();
 
-// 1. MEJORA: Middleware de cabeceras al principio de todo
+// 1. PRIMERO: Forzar cabeceras para saltar ngrok y permitir CORS manualmente
 app.use((req, res, next) => {
-  // Esto permite que el navegador de freeCodeCamp lea la respuesta
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  // Esto fuerza a ngrok a saltarse la pantalla de advertencia
-  res.header("ngrok-skip-browser-warning", "true");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, ngrok-skip-browser-warning");
+  res.header("ngrok-skip-browser-warning", "true"); // OBLIGATORIO para ngrok free
+  
+  // Si es una petición de pre-vuelo (OPTIONS), respondemos OK de inmediato
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
   next();
 });
 
-// 2. Configuración de CORS
+// 2. SEGUNDO: Middleware estándar
 app.use(cors({ optionsSuccessStatus: 200 }));
-
 app.use('/public', express.static(process.cwd() + '/public'));
 
-// Configuración de Multer
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.get('/', (req, res) => {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-// 3. Ruta de análisis de archivo
-// El test 3 exige que el campo se llame 'upfile'
 app.post('/api/fileanalyse', upload.single('upfile'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.json({ error: "No se subió ningún archivo" });
-    }
-
-    // El test 4 requiere exactamente name, type y size
-    res.json({
-      name: req.file.originalname,
-      type: req.file.mimetype,
-      size: req.file.size
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  if (!req.file) return res.json({ error: "Sube un archivo" });
+  
+  res.json({
+    name: req.file.originalname,
+    type: req.file.mimetype,
+    size: req.file.size
+  });
 });
 
 const port = process.env.PORT || 3000;
