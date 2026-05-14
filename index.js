@@ -5,21 +5,19 @@ require('dotenv').config();
 
 const app = express();
 
-// 1. PRIMERO: Forzar cabeceras para saltar ngrok y permitir CORS manualmente
+// ESTO DEBE IR ANTES DE TODO PARA QUE NGROK NO BLOQUEE A FREECODECAMP
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, ngrok-skip-browser-warning");
-  res.header("ngrok-skip-browser-warning", "true"); // OBLIGATORIO para ngrok free
+  res.header("ngrok-skip-browser-warning", "true"); // Esta cabecera es vital para ngrok
   
-  // Si es una petición de pre-vuelo (OPTIONS), respondemos OK de inmediato
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
   next();
 });
 
-// 2. SEGUNDO: Middleware estándar
 app.use(cors({ optionsSuccessStatus: 200 }));
 app.use('/public', express.static(process.cwd() + '/public'));
 
