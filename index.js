@@ -5,39 +5,30 @@ require('dotenv').config();
 
 const app = express();
 
-// Configuración de CORS mejorada para evitar bloqueos
-app.use(cors({ optionsSuccessStatus: 200 }));
+// ESTO ES CLAVE: Salta la advertencia de ngrok para freeCodeCamp
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("ngrok-skip-browser-warning", "true");
+  next();
+});
 
-// Servir archivos estáticos
+app.use(cors({ optionsSuccessStatus: 200 }));
 app.use('/public', express.static(process.cwd() + '/public'));
 
-// Configurar Multer para procesar el archivo en memoria
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.get('/', (req, res) => {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-/**
- * RUTA PARA EL PROYECTO: File Metadata
- * El test espera que el campo del formulario se llame "upfile"
- */
 app.post('/api/fileanalyse', upload.single('upfile'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.json({ error: "Por favor, sube un archivo." });
-    }
-
-    // Respuesta JSON con los datos que pide el Test 4
-    res.json({
-      name: req.file.originalname,
-      type: req.file.mimetype,
-      size: req.file.size
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error en el servidor al procesar el archivo." });
-  }
+  if (!req.file) return res.json({ error: "Sube un archivo" });
+  
+  res.json({
+    name: req.file.originalname,
+    type: req.file.mimetype,
+    size: req.file.size
+  });
 });
 
 const port = process.env.PORT || 3000;
