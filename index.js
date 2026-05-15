@@ -15,7 +15,8 @@ app.get('/', function (req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-const upload = multer({ dest: 'uploads/' });
+// Multer en memoria
+const upload = multer();
 
 app.post('/api/fileanalyse', upload.single('upfile'), (req, res) => {
 
@@ -28,7 +29,7 @@ app.post('/api/fileanalyse', upload.single('upfile'), (req, res) => {
   return res.json({
     name: req.file.originalname,
     type: req.file.mimetype,
-    size: Number(req.file.size)
+    size: req.file.size
   });
 
 });
